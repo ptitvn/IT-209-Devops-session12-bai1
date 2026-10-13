@@ -60,49 +60,57 @@ jobs:
 ### 3.2. Tối ưu bộ nhớ đệm (Gradle Dependency Caching)
 - Sử dụng thuộc tính `cache: 'gradle'` trong action `actions/setup-java@v5`.
 - Cơ chế cache lưu trữ các tệp phụ thuộc (dependencies) trong `~/.gradle/caches` và Gradle Wrapper trong `~/.gradle/wrapper`.
-- Khi các sub-job chạy song song, việc kích hoạt cache giúp giảm thiểu đáng kể thời gian tải thư viện từ Maven Central và giảm tải băng thông mạng.
+- Khi các sub-job chạy, việc kích hoạt cache giúp giảm thiểu đáng kể thời gian tải thư viện từ Maven Central và giảm tải băng thông mạng.
 
 ---
 
 ## 4. Kết quả thực nghiệm trên GitHub Actions
 
 - **Repository**: [https://github.com/ptitvn/IT-209-Devops-session12-bai1](https://github.com/ptitvn/IT-209-Devops-session12-bai1)
-- **Workflow Run**: `feat: setup java matrix CI workflow for JDK 17 and 21` (Run #1)
+- **Workflow**: `Java Spring Boot Matrix CI`
 - **Trạng thái**: **Success** (Tất cả các job đều hoàn thành thành công và có tích xanh).
-- **Tổng thời gian thực thi (Total duration)**: 45 giây.
 
-### Chi tiết các sub-job trong ma trận:
-| Sub-Job | Phiên bản JDK | Trạng thái | Thời gian thực thi | Kết quả kiểm thử |
-| :--- | :---: | :---: | :---: | :---: |
-| **Test on Java 17** | Eclipse Temurin 17 | **Success (Tích xanh)** | 42s | All Tests Passed |
-| **Test on Java 21** | Eclipse Temurin 21 | **Success (Tích xanh)** | 41s | All Tests Passed |
+### So sánh thời gian thực thi:
+| Tiêu chí so sánh | Lần 1 (Tạo Cache mới) | Lần 2 (Khôi phục Cache Hit) | Mức độ cải thiện |
+| :--- | :---: | :---: | :---: |
+| **Run ID** | Run #1 (`e75d118`) | Run #2 (`3cc08b9`) | - |
+| **Sub-job Test on Java 17** | 42s | 23s | **Giảm ~45%** |
+| **Sub-job Test on Java 21** | 41s | 23s | **Giảm ~44%** |
+| **Tổng thời gian Workflow** | **45s** | **26s** | **Giảm 19s (~42%)** |
 
 ---
 
 ## 5. Hình ảnh minh chứng
 
-### 5.1. Tổng quan luồng Matrix Test trên GitHub Actions
+### 5.1. Tổng quan luồng Matrix Test trên GitHub Actions (Lần chạy 1)
 Hiển thị job `test-matrix` tự động rẽ nhánh thành 2 sub-job chạy song song: `Test on Java 17` và `Test on Java 21`, cả 2 đều đạt tích xanh (Success).
 
 ![Matrix Workflow Summary](matrix-workflow-summary.png)
 
 ---
 
-### 5.2. Chi tiết các bước thực thi của Job "Test on Java 17"
-Bao gồm đầy đủ các bước: Checkout mã nguồn, Thiết lập JDK 17 với Gradle Cache, Cấp quyền Gradlew, Chạy kiểm thử Gradle JUnit.
+### 5.2. Luồng Matrix Test với Cache Hit (Lần chạy 2 - 26s)
+Thời gian hoàn thành giảm xuống còn 26s nhờ bộ nhớ đệm Gradle Cache.
+
+![Matrix Workflow Run 2](matrix-workflow-run2.png)
+
+---
+
+### 5.3. Chi tiết các bước thực thi của Job "Test on Java 17"
+Bao gồm đầy đủ các bước: Checkout mã nguồn (`actions/checkout@v5`), Thiết lập JDK 17 với Gradle Cache (`actions/setup-java@v5`), Cấp quyền Gradlew, Chạy kiểm thử Gradle JUnit.
 
 ![Test on Java 17 Details](job-java-17.png)
 
 ---
 
-### 5.3. Chi tiết các bước thực thi của Job "Test on Java 21"
+### 5.4. Chi tiết các bước thực thi của Job "Test on Java 21"
 Bao gồm đầy đủ các bước trên môi trường JDK 21, tất cả các bài test đều vượt qua thành công.
 
 ![Test on Java 21 Details](job-java-21.png)
 
 ---
 
-### 5.4. Lịch sử thực thi trong tab Actions
+### 5.5. Lịch sử thực thi trong tab Actions
 Danh sách workflow runs xác nhận trạng thái hoàn thành thành công trên nhánh `main`.
 
 ![Actions Overview](actions-overview.png)
@@ -112,4 +120,4 @@ Danh sách workflow runs xác nhận trạng thái hoàn thành thành công tr�
 ## 6. Kết luận
 - Cấu hình Matrix Strategy thành công giúp kiểm thử ứng dụng đa phiên bản JDK hoàn toàn tự động, phát hiện sớm các vấn đề không tương thích giữa các phiên bản Java LTS.
 - Việc thực thi song song rút ngắn thời gian phản hồi cho quy trình CI/CD.
-- Tích hợp Gradle Cache tối ưu hóa hiệu năng tổng thể của pipeline.
+- Tích hợp Gradle Cache tối ưu hóa hiệu năng tổng thể của pipeline (thời gian workflow giảm từ 45s xuống 26s).
